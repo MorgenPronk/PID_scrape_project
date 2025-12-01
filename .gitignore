@@ -1,32 +1,28 @@
-# Byte-compiled / optimized / DLL files
+# Environment / virtualenv
+.env
+*.env
+.venv/
+venv/
+env/
+
+# Python cache and tooling
 __pycache__/
 *.py[cod]
-*$py.class
+.mypy_cache/
+.pytest_cache/
+.cache/
+.coverage
+.coverage.*
+htmlcov/
 
-virtualenv/
-venv/
-.env
-
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints
-
-# VS Code settings
+# Editors/OS
 .vscode/
-
-# Data files
-*.xlsx
-*.csv
-
-# OS files
+.idea/
 .DS_Store
-Thumbs.db
 
-# Python egg files
-*.egg
-*.egg-info/
-dist/
-build/
+# Logs
+*.log
 
-# Documents that are used to scrape
-docs/*
-!docs/.gitkeep
+# Local settings
+local_config.json
+pid_tags_config.json

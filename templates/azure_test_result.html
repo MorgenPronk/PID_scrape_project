@@ -1,0 +1,48 @@
+{% set r = result %}
+
+{% set pre = r.precheck or {} %}
+{% set offenders = [] %}
+{% for k, lst in pre.items() %}
+  {% if lst and lst|length > 0 %}
+    {% set _ = offenders.append(k) %}
+  {% endif %}
+{% endfor %}
+
+{% if offenders %}
+  <article class="contrast">
+    <strong>Potential issue:</strong> We detected special characters in your settings fields: <strong>{{ offenders|join(', ') }}</strong>.
+    <br/>These often come from copying from Word/Teams (curly quotes, en‑dashes, invisible spaces). Please retype those values in <a href="/config" target="_blank">Settings</a>.
+    <details><summary>Details</summary>
+      <ul>
+        {% for k, lst in pre.items() %}
+          {% if lst and lst|length > 0 %}
+            <li class="mono">{{ k }}: {% for i,ch,code in lst %}[{{ i }}: {{ code }}]{% endfor %}</li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </details>
+  </article>
+{% endif %}
+
+<div class="grid">
+  <article>
+    <header><strong>Chat</strong></header>
+    {% if r.chat.ok %}
+      <p>OK in <strong>{{ r.chat.latency_ms }} ms</strong></p>
+      <details>
+        <summary>Preview</summary>
+        <pre class="code mono">{{ r.chat.preview }}</pre>
+      </details>
+    {% else %}
+      <p>FAIL</p>
+      <pre class="code mono">{{ r.chat.error }}</pre>
+    {% endif %}
+  </article>
+</div>
+
+{% if not r.ok and r.error %}
+  <article class="contrast">
+    <strong>Overall: FAILED</strong><br/>
+    <code class="mono">{{ r.error }}</code>
+  </article>
+{% endif %}
