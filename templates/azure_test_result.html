@@ -38,33 +38,6 @@
       <pre class="code mono">{{ r.chat.error }}</pre>
     {% endif %}
   </article>
-
-  <article>
-    <header><strong>Structured Parse</strong></header>
-    {% if r.parse.ok %}
-      <p>OK in <strong>{{ r.parse.latency_ms }} ms</strong></p>
-      <details>
-        <summary>Parsed object</summary>
-        <pre class="code mono">{{ r.parse.parsed | tojson(indent=2) }}</pre>
-      </details>
-    {% else %}
-      <p>FAIL</p>
-      <pre class="code mono">{{ r.parse.error }}</pre>
-      <small>If this says "not implemented" or similar, your deployment/API version may not support structured parse.</small>
-    {% endif %}
-  </article>
-
-  <article>
-    <header><strong>Embeddings</strong></header>
-    {% if r.embeddings.ok %}
-      <p>OK in <strong>{{ r.embeddings.latency_ms }} ms</strong></p>
-      <p>Vector dimensions: <span class="pill mono">{{ r.embeddings.dimensions }}</span></p>
-    {% else %}
-      <p>FAIL</p>
-      <pre class="code mono">{{ r.embeddings.error }}</pre>
-      <small>If you didn't deploy an embeddings model with this name, this failure is expected.</small>
-    {% endif %}
-  </article>
 </div>
 
 {% if not r.ok and r.error %}

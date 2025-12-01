@@ -43,8 +43,6 @@ def run_connectivity_tests(settings: dict) -> dict:
         "error": None,
         "precheck": _precheck_ascii(settings),
         "chat": {"ok": False, "latency_ms": None, "preview": None, "error": None},
-        "parse": {"ok": True, "latency_ms": 0, "parsed": {"note": "Structured parse test not implemented"}, "error": None},
-        "embeddings": {"ok": True, "latency_ms": 0, "dimensions": 0, "error": "Not run"},
     }
 
     try:
@@ -75,7 +73,7 @@ def run_connectivity_tests(settings: dict) -> dict:
         except Exception as exc:
             result["chat"] = {"ok": False, "latency_ms": None, "preview": None, "error": str(exc)}
 
-        # Overall status: only chat is required for now
+        # Overall status: only chat is required
         result["ok"] = bool(result["chat"].get("ok"))
 
     except Exception as exc:
