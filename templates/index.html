@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PID Equipment Tag Extractor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <style>
+      main { max-width: 1200px; margin: 2rem auto; }
+      textarea { width: 100%; min-height: 16rem; }
+      pre.code { background:#0f172a; color:#e2e8f0; padding:1rem; border-radius:.5rem; overflow:auto; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; }
+      .pill { display:inline-block; padding:.15rem .5rem; border-radius:999px; background:#e2e8f0; font-size:.8rem; }
+      .warn { color:#b91c1c; }
+      .ok { color:#15803d; }
+      .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+      header nav a { margin-right:.75rem; }
+      small.helper { display:block; margin-top:.25rem; color:#6b7280; }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header class="hero">
+            <p class="eyebrow">Azure OpenAI · P&ID demo</p>
+            <h1>Extract equipment tags without leaving the browser</h1>
+            <p class="lede">Upload one or more text-based PDF P&IDs. The app reads each file, sends the text to Azure OpenAI with your existing prompt, and returns the tags as a tidy list.</p>
+            <form class="upload" action="/extract" method="post" enctype="multipart/form-data">
+                <label class="dropzone">
+                    <input type="file" name="files" accept="application/pdf" multiple required>
+                    <span>Drop PDFs here or click to choose</span>
+                    <small>Multiple files supported · No OCR required</small>
+                </label>
+                <button type="submit">Extract tags</button>
+                <p class="hint">Uses `system_prompt.txt` and `examples.txt` from the repo. Azure credentials come from your .env file.</p>
+            </form>
+            {% if error_message %}
+            <div class="alert error">{{ error_message }}</div>
+            {% endif %}
+        </header>
+
+        {% if submitted %}
+        <section class="results">
+            <div class="section-header">
+                <h2>Results</h2>
+                <p>{{ results|length }} file{{ '' if results|length == 1 else 's' }} processed</p>
+            </div>
+
+            {% if results %}
+            <div class="grid">
+                {% for result in results %}
+                <article class="card">
+                    <div class="card-header">
+                        <h3>{{ result.filename }}</h3>
+                        <span class="pill">{{ result.tags|length }} tags</span>
+                    </div>
+                    {% if result.error %}
+                    <p class="error-text">{{ result.error }}</p>
+                    {% elif result.tags %}
+                    <ul class="tag-list">
+                        {% for tag in result.tags %}
+                        <li>{{ tag }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="muted">No tags returned.</p>
+                    {% endif %}
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="muted">No files were processed.</p>
+            {% endif %}
+        </section>
+        {% endif %}
+    </main>
+</body>
+</html>

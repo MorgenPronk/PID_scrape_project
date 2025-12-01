@@ -1,0 +1,214 @@
+:root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --accent: #0d9488;
+    --accent-2: #f59e0b;
+    --text: #0f172a;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
+    font-family: "DM Sans", "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: radial-gradient(circle at 20% 20%, rgba(13, 148, 136, 0.15), transparent 25%),
+                radial-gradient(circle at 80% 10%, rgba(245, 158, 11, 0.18), transparent 22%),
+                var(--bg);
+    min-height: 100vh;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 64px 20px 80px;
+}
+
+.hero h1 {
+    font-size: clamp(28px, 4vw, 40px);
+    margin: 8px 0 12px;
+    letter-spacing: -0.02em;
+}
+
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.lede {
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 720px;
+    line-height: 1.6;
+}
+
+.upload {
+    margin-top: 28px;
+    display: grid;
+    gap: 14px;
+    max-width: 640px;
+}
+
+.dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 18px;
+    padding: 22px;
+    display: grid;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.9);
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.dropzone:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.dropzone input[type="file"] {
+    display: none;
+}
+
+.dropzone span {
+    font-weight: 700;
+}
+
+.dropzone small {
+    color: var(--muted);
+}
+
+button {
+    justify-self: start;
+    background: linear-gradient(120deg, var(--accent), #10b981);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 36px rgba(16, 185, 129, 0.25);
+}
+
+.hint {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.alert {
+    margin-top: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+
+.alert.error {
+    background: #fef2f2;
+    border-color: #fecdd3;
+    color: #b91c1c;
+}
+
+.results {
+    margin-top: 48px;
+    background: var(--card);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.card {
+    padding: 16px;
+    background: linear-gradient(160deg, #ffffff, #f8fafc);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.pill {
+    background: rgba(13, 148, 136, 0.12);
+    color: var(--accent);
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.tag-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag-list li {
+    background: #f1f5f9;
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 12px;
+}
+
+.muted {
+    color: var(--muted);
+}
+
+.error-text {
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+@media (max-width: 640px) {
+    .page {
+        padding: 32px 16px 48px;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
