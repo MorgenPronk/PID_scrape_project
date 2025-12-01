@@ -6,8 +6,9 @@ from typing import Dict, Iterable, List, Optional
 
 import fitz  # PyMuPDF
 from dotenv import load_dotenv
-from openai import AzureOpenAI
+from openai import AzureOpenAI, OpenAI
 
+from config_store import load_settings
 from log_error import log_error
 
 
@@ -33,38 +34,58 @@ class PIDExtractor:
         *,
         system_prompt_path: str = "system_prompt.txt",
         examples_path: str = "examples.txt",
-        client: Optional[AzureOpenAI] = None,
+        client: Optional[object] = None,
         max_retries: int = 4,
+        provider: Optional[str] = None,
+        api_key: Optional[str] = None,
+        endpoint_url: Optional[str] = None,
+        deployment: Optional[str] = None,
+        model: Optional[str] = None,
+        api_version: Optional[str] = None,
     ) -> None:
         load_dotenv()
+        settings = load_settings()
+
+        self.provider = (provider or settings.get("provider") or "azure").lower()
+        self.api_key = api_key or settings.get("api_key") or os.getenv("API_key") or os.getenv("OPENAI_API_KEY")
+        self.endpoint_url = endpoint_url or settings.get("endpoint_url") or os.getenv("endpoint_url")
+        self.deployment = deployment or settings.get("deployment") or os.getenv("deployment")
+        self.model = model or settings.get("model") or os.getenv("openai_model") or "gpt-4.1"
+        self.api_version = api_version or settings.get("api_version") or os.getenv("api_version")
+
         self.system_prompt = _read_text_file(system_prompt_path)
         self.examples = _read_text_file(examples_path)
-        self.deployment = os.getenv("deployment")
         self.max_retries = max_retries
-        self.client = client or self._build_client_from_env()
 
-    def _build_client_from_env(self) -> AzureOpenAI:
-        api_key = os.getenv("API_key")
-        endpoint_url = os.getenv("endpoint_url")
-        api_version = os.getenv("api_version")
+        self.client = client or self._build_client()
 
-        missing = [name for name, value in {
-            "API_key": api_key,
-            "endpoint_url": endpoint_url,
-            "api_version": api_version,
-            "deployment": self.deployment,
-        }.items() if not value]
+    def _build_client(self):
+        if self.provider == "azure":
+            missing = [
+                name
+                for name, value in {
+                    "API_key": self.api_key,
+                    "endpoint_url": self.endpoint_url,
+                    "api_version": self.api_version,
+                    "deployment": self.deployment,
+                }.items()
+                if not value
+            ]
+            if missing:
+                raise RuntimeError(
+                    "Missing required Azure OpenAI settings: " + ", ".join(sorted(missing))
+                )
 
-        if missing:
-            raise RuntimeError(
-                "Missing required Azure OpenAI environment variables: " + ", ".join(sorted(missing))
+            return AzureOpenAI(
+                api_version=self.api_version,
+                azure_endpoint=self.endpoint_url,
+                api_key=self.api_key,
             )
 
-        return AzureOpenAI(
-            api_version=api_version,
-            azure_endpoint=endpoint_url,
-            api_key=api_key,
-        )
+        # Default to OpenAI
+        if not self.api_key:
+            raise RuntimeError("Missing OpenAI API key")
+        return OpenAI(api_key=self.api_key, base_url=self.endpoint_url or None)
 
     def _generate_with_retry(self, model_input: str) -> Optional[List[str]]:
         tries = 0
@@ -80,7 +101,7 @@ class PIDExtractor:
                 )
 
                 response = self.client.chat.completions.create(
-                    model=self.deployment,
+                    model=self.deployment if self.provider == "azure" else self.model,
                     messages=[
                         {"role": "system", "content": f"{self.system_prompt} \n\n{self.examples}"},
                         {"role": "user", "content": prompt},

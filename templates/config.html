@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block content %}
+    <header class="hero">
+        <p class="eyebrow">Settings</p>
+        <h1>API configuration</h1>
+        <p class="lede">Switch between Azure OpenAI and OpenAI, and set your credentials locally (never committed).</p>
+        <p class="hint">Values are stored in a temp file (<code>{{ config_path }}</code>, chmod 600). Avoid committing this file.</p>
+        <a href="/" class="link">Back to extractor</a>
+    </header>
+
+    <section class="results">
+        <form action="/config" method="post" class="upload" id="settings-form">
+            <fieldset class="provider">
+                <legend>Provider</legend>
+                <label class="inline">
+                    <input type="radio" name="provider_choice" value="openai" {% if settings.provider == 'openai' %}checked{% endif %}>
+                    OpenAI
+                </label>
+                <label class="inline" style="margin-left:1rem">
+                    <input type="radio" name="provider_choice" value="azure" {% if settings.provider != 'openai' %}checked{% endif %}>
+                    Azure OpenAI
+                </label>
+                <small class="helper">OpenAI: model + key. Azure: endpoint, deployment, version, key.</small>
+            </fieldset>
+
+            <fieldset id="block-openai" style="margin-top:1rem">
+                <legend>OpenAI (standard API)</legend>
+                <label>Model
+                    <input type="text" id="openai_model" value="{{ settings.model if settings.provider == 'openai' else '' }}" placeholder="gpt-4.1">
+                    <small class="helper">Example: gpt-4.1, gpt-4o, gpt-4o-mini</small>
+                </label>
+                <label>API Key
+                    <input type="password" id="openai_key" value="" placeholder="sk-...">
+                    {% if settings.api_key %}<small class="helper">A key is already stored. Leave blank to keep it.</small>{% endif %}
+                </label>
+            </fieldset>
+
+            <fieldset id="block-azure" style="margin-top:1rem">
+                <legend>Azure OpenAI</legend>
+                <label>Endpoint
+                    <input type="text" id="azure_endpoint" value="{{ settings.endpoint_url if settings.provider != 'openai' else '' }}" placeholder="https://your-resource.openai.azure.com/">
+                    <small class="helper">Full resource URL from Azure portal.</small>
+                </label>
+                <label>Deployment name
+                    <input type="text" id="azure_deployment" value="{{ settings.deployment if settings.provider != 'openai' else '' }}" placeholder="your-deployment-name">
+                </label>
+                <label>API version
+                    <input type="text" id="azure_api_version" value="{{ settings.api_version if settings.provider != 'openai' else '' }}" placeholder="2024-02-01">
+                </label>
+                <label>API Key
+                    <input type="password" id="azure_key" value="" placeholder="Azure key...">
+                    {% if settings.api_key %}<small class="helper">A key is already stored. Leave blank to keep it.</small>{% endif %}
+                </label>
+            </fieldset>
+
+            <input type="hidden" name="provider" id="provider" value="{{ settings.provider }}">
+            <input type="hidden" name="api_key" id="api_key" value="{{ settings.api_key }}">
+            <input type="hidden" name="endpoint_url" id="endpoint_url" value="{{ settings.endpoint_url }}">
+            <input type="hidden" name="deployment" id="deployment" value="{{ settings.deployment }}">
+            <input type="hidden" name="api_version" id="api_version" value="{{ settings.api_version }}">
+            <input type="hidden" name="model" id="model" value="{{ settings.model }}">
+
+            <button type="submit" style="margin-top:1rem">Save settings</button>
+        </form>
+        {% if saved %}
+            <div class="alert">Settings saved. Restart extraction to apply.</div>
+        {% endif %}
+    </section>
+
+    <script>
+    (function(){
+        const form = document.getElementById('settings-form');
+        const providerRadios = Array.from(document.querySelectorAll('input[name="provider_choice"]'));
+
+        const openaiBlock = document.getElementById('block-openai');
+        const azureBlock = document.getElementById('block-azure');
+
+        const hiddenProvider = document.getElementById('provider');
+        const hiddenApiKey = document.getElementById('api_key');
+        const hiddenEndpoint = document.getElementById('endpoint_url');
+        const hiddenDeployment = document.getElementById('deployment');
+        const hiddenApiVersion = document.getElementById('api_version');
+        const hiddenModel = document.getElementById('model');
+
+        const openaiModel = document.getElementById('openai_model');
+        const openaiKey = document.getElementById('openai_key');
+
+        const azureEndpoint = document.getElementById('azure_endpoint');
+        const azureDeployment = document.getElementById('azure_deployment');
+        const azureApiVersion = document.getElementById('azure_api_version');
+        const azureKey = document.getElementById('azure_key');
+
+        function currentProvider(){
+            const picked = providerRadios.find(r => r.checked);
+            return picked ? picked.value : 'azure';
+        }
+
+        function render(){
+            const p = currentProvider();
+            openaiBlock.style.display = p === 'openai' ? 'block' : 'none';
+            azureBlock.style.display = p === 'azure' ? 'block' : 'none';
+        }
+
+        function syncHidden(){
+            const p = currentProvider();
+            hiddenProvider.value = p;
+            if (p === 'openai') {
+                hiddenEndpoint.value = '';
+                hiddenDeployment.value = (openaiModel.value || '').trim();
+                hiddenApiVersion.value = '';
+                hiddenModel.value = (openaiModel.value || '').trim();
+                const newKey = (openaiKey.value || '').trim();
+                hiddenApiKey.value = newKey || hiddenApiKey.value;
+            } else {
+                hiddenEndpoint.value = (azureEndpoint.value || '').trim();
+                hiddenDeployment.value = (azureDeployment.value || '').trim();
+                hiddenApiVersion.value = (azureApiVersion.value || '').trim();
+                hiddenModel.value = (azureDeployment.value || '').trim();
+                const newKey = (azureKey.value || '').trim();
+                hiddenApiKey.value = newKey || hiddenApiKey.value;
+            }
+        }
+
+        providerRadios.forEach(r => r.addEventListener('change', () => { render(); syncHidden(); }));
+        [openaiModel, openaiKey, azureEndpoint, azureDeployment, azureApiVersion, azureKey].forEach(el => {
+            if (!el) return;
+            el.addEventListener('input', syncHidden);
+            el.addEventListener('change', syncHidden);
+        });
+
+        form.addEventListener('submit', () => syncHidden());
+
+        render();
+        syncHidden();
+    })();
+    </script>
+{% endblock %}

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title or 'PID Equipment Tag Extractor' }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <style>
+      main { max-width: 1200px; margin: 2rem auto; }
+      textarea { width: 100%; min-height: 16rem; }
+      pre.code { background:#0f172a; color:#e2e8f0; padding:1rem; border-radius:.5rem; overflow:auto; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; }
+      .pill { display:inline-block; padding:.15rem .5rem; border-radius:999px; background:#e2e8f0; font-size:.8rem; }
+      .warn { color:#b91c1c; }
+      .ok { color:#15803d; }
+      .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+      header nav a { margin-right:.75rem; }
+      small.helper { display:block; margin-top:.25rem; color:#6b7280; }
+      .inline { display:inline-flex; align-items:center; gap:.35rem; }
+      fieldset.provider label.inline { margin-right:1rem; }
+    </style>
+</head>
+<body>
+    <header class="container">
+      <nav>
+        <ul>
+          <li><strong>PID Tags</strong></li>
+        </ul>
+        <ul>
+          <li><a href="/">Extractor</a></li>
+          <li><a href="/config">Settings</a></li>
+          <li><a href="/azure-test">API Test</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main class="page">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

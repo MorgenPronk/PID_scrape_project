@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Settings</h2>
+
+{% set provider = (settings.get('PROVIDER','') or ('azure' if settings.get('endpoint_url') else 'openai')) %}
+
+{% if any_issue %}
+  <article class="contrast">
+    <strong>Heads up:</strong> We detected special characters in one or more fields below.
+    These can break Azure connections. Paste only from the Azure Portal, or retype using your keyboard
+    (no Word/Teams smart punctuation).
+  </article>
+{% endif %}
+
+<form method="post" id="settings-form">
+  <!-- Provider selector -->
+  <fieldset class="provider">
+    <legend>Provider</legend>
+    <label class="inline">
+      <input type="radio" name="__provider_ui" value="openai" {% if provider=='openai' %}checked{% endif %} />
+      OpenAI (api.openai.com)
+    </label>
+    <label class="inline" style="margin-left:1rem">
+      <input type="radio" name="__provider_ui" value="azure" {% if provider=='azure' %}checked{% endif %} />
+      Azure OpenAI (your Azure resource)
+    </label>
+    <!-- Optional: submit a PROVIDER hint; your backend may ignore this, and that's okay -->
+    <input type="hidden" name="PROVIDER" id="PROVIDER" value="{{ 'openai' if provider=='openai' else 'azure' }}" />
+    <small class="helper">
+      Tip: If you pick <strong>OpenAI</strong>, you only need an API key and a model name.
+      If you pick <strong>Azure</strong>, you’ll need your resource endpoint, API version, deployment name, and key.
+    </small>
+  </fieldset>
+
+  <!-- OpenAI block -->
+  <fieldset id="block-openai" style="margin-top:1rem">
+    <legend>OpenAI (standard API)</legend>
+    <label>Model (used as “Deployment” internally)
+      <input type="text" name="deployment" id="deployment_openai"
+             value="{{ settings.get('deployment','') if provider=='openai' else '' }}"
+             placeholder="e.g. gpt-4.1, gpt-4o, gpt-4o-mini" />
+      <small class="helper">Enter the model name exactly as you’d use it in the SDK.</small>
+      <small id="deployment_openai_warn" class="helper warn" style="display:none">Warning: special characters detected. Please retype.</small>
+      {% if provider=='openai' and issues.get('deployment') %}
+        <small class="helper warn">Saved value contained special chars at positions:
+          {% for i,ch,code in issues['deployment'] %} [{{ i }}: {{ code }}]{% endfor %}
+        </small>
+      {% endif %}
+    </label>
+
+    <label>API Key
+      <input type="password" name="API_key" id="API_key_openai" value="" placeholder="sk-..." />
+      {% if settings.get('API_key') %}
+        <small class="helper">A key is already stored. Leave blank to keep it.</small>
+      {% endif %}
+      <small id="API_key_openai_warn" class="helper warn" style="display:none">Warning: special characters detected. Please retype.</small>
+    </label>
+
+    <details>
+      <summary>Warning: What gets saved?</summary>
+      <small class="helper">
+        These values are stored securely in your local database. If this application is deployed on a server,
+        ensure the server’s file storage is access-controlled. The database is not encrypted by default.
+      </small>
+    </details>
+  </fieldset>
+
+  <!-- Azure block -->
+  <fieldset id="block-azure" style="margin-top:1rem">
+    <legend>Azure OpenAI</legend>
+
+    <label>Azure OpenAI Endpoint
+      <input type="text" name="endpoint_url" id="endpoint_url_azure"
+             value="{{ settings.get('endpoint_url','') if provider=='azure' else '' }}"
+             placeholder="https://YOUR-RESOURCE.openai.azure.com/" />
+      <small class="helper">Example: https://my-resource.openai.azure.com</small>
+      <small id="endpoint_url_azure_warn" class="helper warn" style="display:none">Warning: special characters detected. Please retype.</small>
+      {% if provider=='azure' and issues.get('endpoint_url') %}
+        <small class="helper warn">Saved value contained special chars at positions:
+          {% for i,ch,code in issues['endpoint_url'] %} [{{ i }}: {{ code }}]{% endfor %}
+        </small>
+      {% endif %}
+    </label>
+
+    <label>Deployment Name
+      <input type="text" name="deployment" id="deployment_azure"
+             value="{{ settings.get('deployment','') if provider=='azure' else '' }}"
+             placeholder="your-azure-deployment-name" />
+      <small id="deployment_azure_warn" class="helper warn" style="display:none">Warning: special characters detected. Please retype.</small>
+      {% if provider=='azure' and issues.get('deployment') %}
+        <small class="helper warn">Saved value contained special chars at positions:
+          {% for i,ch,code in issues['deployment'] %} [{{ i }}: {{ code }}]{% endfor %}
+        </small>
+      {% endif %}
+    </label>
+
+    <label>API Version
+      <input type="text" name="api_version" id="api_version_azure"
+             value="{{ settings.get('api_version','') if provider=='azure' else '' }}"
+             placeholder="2024-08-01-preview" />
+      <small class="helper">Hyphens must be regular '-' not '–'</small>
+      <small id="api_version_azure_warn" class="helper warn" style="display:none">Warning: special characters detected. Please retype.</small>
+      {% if provider=='azure' and issues.get('api_version') %}
+        <small class="helper warn">Saved value contained special chars at positions:
+          {% for i,ch,code in issues['api_version'] %} [{{ i }}: {{ code }}]{% endfor %}
+        </small>
+      {% endif %}
+    </label>
+
+    <label>API Key
+      <input type="password" name="API_key" id="API_key_azure" value="" placeholder="Azure key..." />
+      {% if settings.get('API_key') %}
+        <small class="helper">A key is already stored. Leave blank to keep it.</small>
+      {% endif %}
+      <small id="API_key_azure_warn" class="helper warn" style="display:none">Warning: special characters detected. Please retype.</small>
+    </label>
+
+    <details>
+      <summary>Warning: What gets saved?</summary>
+      <small class="helper">
+        These values are stored securely in your local database. If this application is deployed on a server,
+        ensure the server’s file storage is access-controlled. The database is not encrypted by default.
+      </small>
+    </details>
+  </fieldset>
+
+  <!-- Hidden canonical inputs that your backend expects.
+       JS will keep these synchronized from whichever block is visible. -->
+  <input type="hidden" name="endpoint_url" id="endpoint_url" value="{{ settings.get('endpoint_url','') }}">
+  <input type="hidden" name="deployment"   id="deployment"   value="{{ settings.get('deployment','') }}">
+  <input type="hidden" name="api_version"  id="api_version"  value="{{ settings.get('api_version','') }}">
+  <input type="hidden" name="API_key"      id="API_key"      value="">
+
+  <button type="submit" style="margin-top:1rem">Save (sanitize &amp; fix)</button>
+</form>
+
+<script>
+(function(){
+  // Non-ASCII check
+  function hasNonASCII(s){ return /[^ -\x7f]/.test(s||''); }
+
+  // Elements
+  const form = document.getElementById('settings-form');
+  const providerRadios = [...document.querySelectorAll('input[name="__provider_ui"]')];
+  const PROVIDER = document.getElementById('PROVIDER');
+
+  const blockOpenAI = document.getElementById('block-openai');
+  const blockAzure  = document.getElementById('block-azure');
+
+  // Visible inputs (per block)
+  const deployment_openai = document.getElementById('deployment_openai');
+  const API_key_openai = document.getElementById('API_key_openai');
+
+  const endpoint_url_azure = document.getElementById('endpoint_url_azure');
+  const deployment_azure   = document.getElementById('deployment_azure');
+  const api_version_azure  = document.getElementById('api_version_azure');
+  const API_key_azure      = document.getElementById('API_key_azure');
+
+  // Canonical hidden inputs (what backend expects)
+  const endpoint_url = document.getElementById('endpoint_url');
+  const deployment   = document.getElementById('deployment');
+  const api_version  = document.getElementById('api_version');
+  const API_key      = document.getElementById('API_key');
+
+  function currentProvider(){
+    const r = providerRadios.find(r=>r.checked);
+    return r ? r.value : 'openai';
+  }
+
+  function syncHidden(){
+    const p = currentProvider();
+    if (p === 'openai') {
+      endpoint_url.value = '';
+      api_version.value  = '';
+      deployment.value   = (deployment_openai.value || '').trim();
+      API_key.value      = (API_key_openai.value || '').trim();
+    } else {
+      endpoint_url.value = (endpoint_url_azure.value || '').trim();
+      api_version.value  = (api_version_azure.value || '').trim();
+      deployment.value   = (deployment_azure.value || '').trim();
+      API_key.value      = (API_key_azure.value || '').trim();
+    }
+    if (PROVIDER) PROVIDER.value = p;
+  }
+
+  function render(){
+    const p = currentProvider();
+    blockOpenAI.style.display = (p === 'openai') ? 'block' : 'none';
+    blockAzure.style.display  = (p === 'azure')  ? 'block' : 'none';
+    syncHidden();
+  }
+
+  providerRadios.forEach(r => r.addEventListener('change', render));
+
+  // Warners (live)
+  function wireWarn(inputId, warnId){
+    const el = document.getElementById(inputId);
+    const warn = document.getElementById(warnId);
+    if(!el || !warn) return;
+    const check = ()=>{ warn.style.display = hasNonASCII(el.value) ? 'block':'none'; };
+    el.addEventListener('input', check);
+    el.addEventListener('paste', ()=>setTimeout(check,0));
+    check();
+  }
+
+  // Wire both blocks
+  wireWarn('deployment_openai','deployment_openai_warn');
+  wireWarn('API_key_openai','API_key_openai_warn');
+
+  wireWarn('endpoint_url_azure','endpoint_url_azure_warn');
+  wireWarn('deployment_azure','deployment_azure_warn');
+  wireWarn('api_version_azure','api_version_azure_warn');
+  wireWarn('API_key_azure','API_key_azure_warn');
+
+  // Keep hidden fields in sync while typing
+  [
+    deployment_openai, API_key_openai,
+    endpoint_url_azure, deployment_azure, api_version_azure, API_key_azure
+  ].forEach(el => {
+    if (!el) return;
+    el.addEventListener('input', syncHidden);
+    el.addEventListener('change', syncHidden);
+  });
+
+  // Final sync before submit
+  form.addEventListener('submit', function(){
+    syncHidden();
+  });
+
+  // Initial render
+  render();
+})();
+</script>
+
+<style>
+  fieldset.provider { margin-bottom: 0.5rem; }
+  label.inline { display: inline-flex; align-items: center; gap: .35rem; }
+  .helper { display:block; opacity:.8; }
+  .warn { color: #b33; }
+</style>
+
+{% endblock %}
